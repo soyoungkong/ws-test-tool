@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Hello WebSocket</title>
+    <link href="/webjars/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <script src="/webjars/jquery/jquery.min.js"></script>
+    <script src="/webjars/sockjs-client/sockjs.min.js"></script>
+    <script src="/webjars/stomp-websocket/stomp.min.js"></script>
+</head>
+<body>
+<noscript>
+    <h2 style="color: #ff0000">Seems your browser doesn't support Javascript! Websocket relies on Javascript being
+    enabled. Please enable
+    Javascript and reload this page!</h2>
+</noscript>
+<div id="main-content" class="container">
+    <div class="row">
+        <div class="col-md-6">
+            <form class="form-inline">
+                <div class="form-group">
+                    <div>
+                        const topic = "pose2D"
+                        <br>
+                    const topic = "workState"
+                        <br>
+                    const topic = "jobState"
+                        <br>
+                    const topic = "jobDetail"
+                        <br>
+                    const topic = "bms"
+                        <br>
+                    const topic = "notAssignedJob"
+                        <br>
+                    const topic = "recentAlarm"
+                    </div>
+                    <label for="topic">topic</label>
+                    <input type="text" id="topic" class="form-control">
+                </div>
+                <!--                <button id="send" class="btn btn-default" type="submit">Send</button>-->
+            </form>
+        </div>
+        <div class="col-md-12">
+            <form class="form-inline">
+                <div class="form-group">
+                    <label for="connect">WebSocket connection:</label>
+                    <button id="connect" class="btn btn-default" type="submit">Connect</button>
+                    <button id="disconnect" class="btn btn-default" type="submit" disabled="disabled">
+                        Disconnect
+                    </button>
+                    <button id="unsubscribe" class="btn btn-default" type="submit">
+                        unsubscribe
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <table id="conversation" class="table table-striped">
+                <thead>
+                <tr>
+                    <th>data</th>
+                </tr>
+                </thead>
+                <tbody id="greetings">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+<script>
+    $(document).ready(()=>{
+    });
+
+    let stompClient = null;
+    let robotTopic = null;
+    // const topic = "pose2D"
+    // const topic = "workState"
+    // const topic = "jobState"
+    // const topic = "jobDetail"
+    // const topic = "bms"
+    // const topic = "notAssignedJob"
+    // const topic = "recentAlarm"
+
+    function setConnected(connected) {
+        $("#connect").prop("disabled", connected);
+        $("#disconnect").prop("disabled", !connected);
+        if (connected) {
+            $("#conversation").show();
+        }
+        else {
+            $("#conversation").hide();
+        }
+        $("#greetings").html("");
+    }
+
+
+    function connect() {
+        const topic = $("#topic").val();
+        var socket = new SockJS('http://localhost:12000/stream');
+        stompClient = Stomp.over(socket);
+        const headers = { topic : topic }
+        stompClient.connect(headers, function (frame) {
+            setConnected(true);
+            console.log('Connected: ' + frame);
+            robotTopic = stompClient.subscribe('/user/sub/' + topic, function (response) {
+                console.log(response)
+                showGreeting(response.body);
+            }, headers);
+        });
+    }
+
+    function disconnect() {
+        const headers = { topic : topic }
+
+        if (stompClient !== null) {
+            stompClient.disconnect(function(response){
+                console.log("disconnect response", response);
+            });
+        }
+        setConnected(false);
+        console.log("Disconnected");
+    }
+
+    function unsubscribe() {
+        robotTopic.unsubscribe();
+        console.log("unsubscribe");
+    }
+    function showGreeting(message) {
+        $("#greetings").append("<tr><td>" + message + "</td></tr>");
+    }
+
+    $(function () {
+        $("form").on('submit', function (e) {
+            e.preventDefault();
+        });
+        $( "#connect" ).click(function() { connect(); });
+        $( "#disconnect" ).click(function() { disconnect(); });
+        $( "#unsubscribe" ).click(function() { unsubscribe(); });
+    });
+</script>
+<style>
+    body {
+        background-color: #f5f5f5;
+    }
+
+    #main-content {
+        max-width: 940px;
+        padding: 2em 3em;
+        margin: 0 auto 20px;
+        background-color: #fff;
+        border: 1px solid #e5e5e5;
+        -webkit-border-radius: 5px;
+        -moz-border-radius: 5px;
+        border-radius: 5px;
+    }
+</style>
+</html>
