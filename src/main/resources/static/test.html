@@ -99,7 +99,7 @@
 
     function connect() {
         const topic = $("#topic").val();
-        var socket = new SockJS('http://localhost:12000/stream');
+        var socket = new SockJS('http://192.168.10.206:12000/stream');
         stompClient = Stomp.over(socket);
         const headers = { topic : topic }
         stompClient.connect(headers, function (frame) {
