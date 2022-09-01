@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Hello WebSocket</title>
+    <link href="/webjars/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <script src="/webjars/jquery/jquery.min.js"></script>
+    <script src="/webjars/sockjs-client/sockjs.min.js"></script>
+    <script src="/webjars/stomp-websocket/stomp.min.js"></script>
+</head>
+<body>
+<noscript>
+    <h2 style="color: #ff0000">Seems your browser doesn't support Javascript! Websocket relies on Javascript being
+    enabled. Please enable
+    Javascript and reload this page!</h2>
+</noscript>
+<div id="main-content" class="container">
+    <form class="form-group">
+    <div class="row blocks">
+        <div class="col-md-1 title">/state</div>
+        <div class="col-md-2">로봇 상태 by CORE</div>
+        <div class="col-md-9">
+                <label for="pose2d">위치(pose2d) <input type="radio" id="pose2d" name="radio" value="/pose2d" checked></label>
+                <label for="work">상태(workState)<input type="radio" id="work" name="radio" value="/work"></label>
+                <label for="bms">배터리(bms) <input type="radio" id="bms" name="radio" value="/bms"></label>
+                <label for="device">차상(device) <input type="radio" id="device" name="radio" value="/device"></label>
+                <label for="mode">모드(mode) <input type="radio" id="mode" name="radio" value="/mode"></label>
+        </div>
+    </div>
+    <div class="row blocks">
+        <div class="col-md-1 title">/state</div>
+        <div class="col-md-2">로봇 상태 by SARI</div>
+        <div class="col-md-9">
+                <label for="map/correction">맵 일치율(map/correction) <input type="radio" id="map/correction" name="radio" value="/map/correction"></label>
+                <label for="plan/path">경로 계획(plan/path) <input type="radio" id="plan/path" name="radio" value="/plan/path"></label>
+                <label for="break">브레이크 (break) <input type="radio" id="break" name="radio" value="/break"></label>
+                <label for="sensor">센서(sensor)<input type="radio" id="sensor" name="radio" value="/sensor"></label>
+        </div>
+    </div>
+    <div class="row blocks">
+        <div class="col-md-1 title">/info</div>
+        <div class="col-md-2">로봇 정보 by SARI</div>
+        <div class="col-md-9">
+                <label for="motor">모터(motor) <input type="radio" id="motor" name="radio" value="/motor" ></label>
+        </div>
+    </div>
+    <div class="row blocks">
+        <div class="col-md-1 title">/job</div>
+        <div class="col-md-2">Job 상태 by CORE</div>
+        <div class="col-md-9">
+            <label for="jobNull">job상태 <input type="radio" id="jobNull" name="radio" value="jobNull" ></label>
+            <label for="detail">job디테일(detail) <input type="radio" id="detail" name="radio" value="/detail" ></label>
+            <label for="assign">job미할당(assign) <input type="radio" id="assign" name="radio" value="/assign/not" ></label>
+        </div>
+    </div>
+    <div class="row blocks">
+        <div class="col-md-1 title">/alarm</div>
+        <div class="col-md-2">알람 by CORE</div>
+        <div class="col-md-9">
+            <label for="jobNull">최신(/recent) <input type="radio" id="recent" name="radio" value="/recent" ></label>
+        </div>
+    </div>
+    <div class="row blocks">
+        <div class="col-md-3 title"> 로봇 번호 </div>
+        <div class="col-md-9">
+            <label for="robot">
+                <input type="number" id="robot" class="form-control" style="display: inline-block; width: 60px" min="0" max="100">
+                <button id="robotClear" class="btn btn-default" type="button">Clear</button>
+            </label>
+        </div>
+    </div>
+    <div class="row buttons" style="background-color: bisque">
+        <div class="col-md-3" style="font-size: 1.5em">CONNECTION </div>
+        <div class="col-md-9">
+            <button id="connect" class="btn btn-default" type="submit" disabled="disabled">Connect</button>
+            <button id="disconnect" class="btn btn-default" type="submit" disabled="disabled">Disconnect</button>
+            <button id="unsubscribe" class="btn btn-default" type="submit" disabled="disabled">unsubscribe</button>
+            <div style="display: inline-block; font-weight: normal">(접속 토픽 : <span id="topicFinal"></span>)</div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <table id="dataTable" class="table table-striped">
+                <tbody id="dataBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</form>
+</div>
+</body>
+<script>
+    let stompClient = null;
+    let connecting = null;
+    const topicBase = '/user/sub';
+    let topic = '';
+
+    $("input[name='radio']:radio").change(function () {
+        completeTopic();
+    });
+
+    $("#robot").change(function(){
+        completeTopic();
+
+    });
+
+    $("#robotClear").click(function(){
+        $("#robot").val("");
+        unsubscribe();
+    });
+
+    function completeTopic(){
+        const topicSub = $('[name="radio"]:checked').parents().siblings( 'div.title' ).html();
+        let radioVal = $('[name="radio"]:checked').val()
+        let robotVal = String($("#robot").val());
+
+        if(radioVal == "/assign/not" || radioVal == "/recent") {
+            robotVal = ""
+        }else{
+            // if(robotVal.length == 0){
+            //     alert("로봇 번호를 입력해주세요.");
+            //     $("#connect").prop("disabled", true);
+            //     $("#robot").focus();
+            //     return;
+            // }
+        }
+
+        if (robotVal.length > 0){
+            robotVal = "00" + robotVal;
+            robotVal.slice(-3);
+            robotVal = "/R_"+ robotVal;
+        }
+
+        if (radioVal == "jobNull") radioVal = ""
+
+        topic = topicBase + topicSub + robotVal + radioVal;
+        $("#topicFinal").text(topic);
+        $("#connect").prop("disabled", false);
+    }
+
+    function setConnected(connected) {
+        $("#connect").prop("disabled", connected);
+        $("#disconnect").prop("disabled", !connected);
+        $("#unsubscribe").prop("disabled", !connected);
+        if (connected) {
+            $("#dataTable").show();
+        }
+        else {
+            $("#dataTable").hide();
+        }
+        $("#dataBody").html("");
+    }
+
+    function connect() {
+        var socket = new SockJS('http://localhost:12000/stream');
+        stompClient = Stomp.over(socket);
+        const headers = {}
+        stompClient.connect(headers, function (frame) {
+            setConnected(true);
+            console.log('Connected: ' + frame);
+
+            connecting = stompClient.subscribe(topic, function (response) {
+                console.log(response)
+                showGreeting(response.body);
+            }, headers);
+        });
+    }
+
+    function disconnect() {
+        if (stompClient !== null) {
+            stompClient.disconnect(function(response){
+                console.log("disconnect response", response);
+            });
+        }
+        setConnected(false);
+        console.log("Disconnected");
+    }
+
+    function unsubscribe() {
+        connecting.unsubscribe();
+        setConnected(false);
+        console.log("unsubscribe");
+    }
+    function showGreeting(message) {
+        $("#dataBody").append("<tr><td>" + message + "</td></tr>");
+    }
+
+    $(function () {
+        $("form").on('submit', function (e) {
+            e.preventDefault();
+        });
+        $( "#connect" ).click(function() { connect(); });
+        $( "#disconnect" ).click(function() { disconnect(); });
+        $( "#unsubscribe" ).click(function() { unsubscribe(); });
+    });
+</script>
+<style>
+    body {
+        background-color: #f5f5f5;
+    }
+    label {
+        padding-right: 15px;
+        font-weight: normal;
+    }
+    #main-content {
+        padding: 2em 3em;
+        margin: 0 auto 20px;
+        background-color: #fff;
+        border: 1px solid #e5e5e5;
+        -webkit-border-radius: 5px;
+        -moz-border-radius: 5px;
+        border-radius: 5px;
+    }
+    .title{
+        font-weight: bold;
+    }
+
+    .blocks {
+        padding-top: 12px;
+    }
+
+    .buttons {
+        font-weight: bold;
+        padding: 12px 0 12px 0;
+    }
+</style>
+</html>
