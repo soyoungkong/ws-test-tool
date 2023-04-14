@@ -15,6 +15,16 @@
     Javascript and reload this page!</h2>
 </noscript>
 <div id="main-content" class="container">
+    <form class="form-group">
+        <div class="row blocks">
+            <div class="col-md-1 title">topic</div>
+            <div class="col-md-2">HMI mock by SFS</div>
+            <div class="col-md-9">
+                <label for="work">work <input type="radio" id="work" name="radio" value="/work" checked></label>
+                <label for="job">job<input type="radio" id="job" name="radio" value="/job"></label>
+                <label for="alarm">alarm <input type="radio" id="alarm" name="radio" value="/alarm"></label>
+            </div>
+        </div>
     <div class="row buttons" style="background-color: bisque">
         <div class="col-md-3" style="font-size: 1.5em">CONNECTION </div>
         <div class="col-md-9">
@@ -57,32 +67,35 @@
     });
 
     function completeTopic(){
-        const topicSub = $('[name="radio"]:checked').parents().siblings( 'div.title' ).html();
-        let radioVal = $('[name="radio"]:checked').val()
-        let robotVal = String($("#robot").val());
-
-        if(radioVal == "/assign/not" || radioVal == "/recent") {
-            robotVal = ""
-        }else{
-            // if(robotVal.length == 0){
-            //     alert("로봇 번호를 입력해주세요.");
-            //     $("#connect").prop("disabled", true);
-            //     $("#robot").focus();
-            //     return;
-            // }
-        }
-
-        if (robotVal.length > 0){
-            robotVal = "00" + robotVal;
-            robotVal.slice(-3);
-            robotVal = "/R_"+ robotVal;
-        }
-
-        if (radioVal == "jobNull") radioVal = ""
-
-        topic = topicBase + topicSub + robotVal + radioVal;
-        $("#topicFinal").text(topic);
+        const topic =  $('[name="radio"]:checked').val();
+        $("#topicFinal").text("/topic" + topic+ "/5792525b3c84f8bf");
         $("#connect").prop("disabled", false);
+        // const topicSub = $('[name="radio"]:checked').parents().siblings( 'div.title' ).html();
+        // let radioVal = $('[name="radio"]:checked').val()
+        // let robotVal = String($("#robot").val());
+        //
+        // if(radioVal == "/assign/not" || radioVal == "/recent") {
+        //     robotVal = ""
+        // }else{
+        //     // if(robotVal.length == 0){
+        //     //     alert("로봇 번호를 입력해주세요.");
+        //     //     $("#connect").prop("disabled", true);
+        //     //     $("#robot").focus();
+        //     //     return;
+        //     // }
+        // }
+        //
+        // if (robotVal.length > 0){
+        //     robotVal = "00" + robotVal;
+        //     robotVal.slice(-3);
+        //     robotVal = "/R_"+ robotVal;
+        // }
+        //
+        // if (radioVal == "jobNull") radioVal = ""
+        //
+        // topic = topicBase + topicSub + robotVal + radioVal;
+        // $("#topicFinal").text(topic);
+        // $("#connect").prop("disabled", false);
     }
 
     function setConnected(connected) {
@@ -99,13 +112,15 @@
     }
 
     function connect() {
+        const topic =  $('[name="radio"]:checked').val();
+        console.log(topic);
         var socket = new SockJS('http://192.168.20.200:14000/stream');
         stompClient = Stomp.over(socket);
         stompClient.connect({}, function (frame) {
             setConnected(true);
             console.log('Connected: ' + frame);
 
-            connecting = stompClient.subscribe("/topic/work/5792525b3c84f8bf", function (response) {
+            connecting = stompClient.subscribe("/topic" + topic+ "/5792525b3c84f8bf", function (response) {
                 console.log(response)
                 showGreeting(response.body);
             });
