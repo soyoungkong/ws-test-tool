@@ -25,8 +25,8 @@
             <div style="display: inline-block; font-weight: normal">(접속 토픽 : <span id="topicFinal"></span>)</div>
         </div>
     </div>
-    <div class="row">
-        <div class="col-md-12">
+    <div class="row" id="scroll" >
+        <div class="">
             <table id="dataTable" class="table table-striped">
                 <tbody id="dataBody">
                 </tbody>
@@ -124,11 +124,21 @@
 
     function unsubscribe() {
         connecting.unsubscribe();
-        setConnected(false);
+        $("#unsubscribe").prop("disabled", true);
+        $("#dataTable").hide();
+        $("#dataBody").html("");
         console.log("unsubscribe");
     }
     function showGreeting(message) {
-        $("#dataBody").append("<tr><td>" + message + "</td></tr>");
+        let today = new Date();
+
+        let hours = today.getHours(); // 시
+        let minutes = today.getMinutes();  // 분
+        let seconds = today.getSeconds();  // 초
+        let milliseconds = today.getMilliseconds(); // 밀리초
+
+        let time = "[" + hours + ':' + minutes + ':' + seconds + ':' + milliseconds + "] ";
+        $("#dataBody").append("<tr><td style='word-break: break-all'>" + time + message + "</td></tr>");
     }
 
     $(function () {
@@ -136,10 +146,9 @@
             e.preventDefault();
         });
         $( "#connect" ).click(function() { connect(); });
-        $( "#connect2" ).click(function() { connect2(); });
         $( "#disconnect" ).click(function() { disconnect(); });
         $( "#unsubscribe" ).click(function() { unsubscribe(); });
-    });
+   });
 </script>
 <style>
     body {
