@@ -20,11 +20,14 @@
         <div class="col-md-1 title">/state</div>
         <div class="col-md-2">로봇 상태 by CORE</div>
         <div class="col-md-9">
-                <label for="pose2d">위치(pose2d) <input type="radio" id="pose2d" name="radio" value="/pose2d" checked></label>
-                <label for="work">상태(workState)<input type="radio" id="work" name="radio" value="/work"></label>
+                <label for="pose">위치(pose2d) <input type="radio" id="pose" name="radio" value="/pose" checked></label>
+                <label for="work">상태(work)<input type="radio" id="work" name="radio" value="/work"></label>
+                <label for="info">로봇 info<input type="radio" id="info" name="radio" value="/info"></label>
                 <label for="bms">배터리(bms) <input type="radio" id="bms" name="radio" value="/bms"></label>
                 <label for="device">차상(device) <input type="radio" id="device" name="radio" value="/device"></label>
+                <label for="outer/device">차상(device) <input type="radio" id="outer/device" name="radio" value="/outer/device"></label>
                 <label for="mode">모드(mode) <input type="radio" id="mode" name="radio" value="/mode"></label>
+                <label for="controller"> 컨트롤러 <input type="radio" id="controller" name="radio" value="/controller"></label>
         </div>
     </div>
     <div class="row blocks">
@@ -38,10 +41,22 @@
         </div>
     </div>
     <div class="row blocks">
-        <div class="col-md-1 title">/info</div>
+        <div class="col-md-1 title">/state</div>
         <div class="col-md-2">로봇 정보 by SARI</div>
         <div class="col-md-9">
-                <label for="motor">모터(motor) <input type="radio" id="motor" name="radio" value="/motor" ></label>
+                <label for="lccs">lccs <input type="radio" id="lccs" name="radio" value="/lccs"></label>
+                <label for="parts">parts <input type="radio" id="parts" name="radio" value="/parts"></label>
+                <label for="motor">모터(motor) <input type="radio" id="motor" name="radio" value="/motor"></label>
+                <label for="motor/feed">모터 feed <input type="radio" id="motor/feed" name="radio" value="/motor/feed" ></label>
+                <label for="scan/2d"> 라이다 데이터 <input type="radio" id="scan/2d" name="radio" value="/scan/2d" ></label>
+        </div>
+    </div>
+    <div class="row blocks">
+        <div class="col-md-1 title">/state</div>
+        <div class="col-md-2">Third Party</div>
+        <div class="col-md-9">
+            <label for="/thirdparty/pose">pose <input type="radio" id="/thirdparty/pose" name="radio" value="/thirdparty/pose"></label>
+            <label for="/thirdparty/base">base <input type="radio" id="/thirdparty/base" name="radio" value="/thirdparty/base"></label>
         </div>
     </div>
     <div class="row blocks">
@@ -60,6 +75,14 @@
             <label for="jobNull">최신(/recent) <input type="radio" id="recent" name="radio" value="/recent" ></label>
         </div>
     </div>
+        <div class="row blocks">
+            <div class="col-md-1 title">/map</div>
+            <div class="col-md-2">map by mqtt </div>
+            <div class="col-md-9">
+                <label for="update">맵 업데이트<input type="radio" id="update" name="radio" value="/update" ></label>
+                <label for="upload">맵 업로드 <input type="radio" id="upload" name="radio" value="/upload" ></label>
+            </div>
+        </div>
     <div class="row blocks">
         <div class="col-md-3 title"> 로봇 번호 </div>
         <div class="col-md-9">
@@ -92,7 +115,7 @@
 <script>
     let stompClient = null;
     let connecting = null;
-    const topicBase = '/user/sub';
+    const topicBase = '/sub';
     let topic = '';
 
     $("input[name='radio']:radio").change(function () {
