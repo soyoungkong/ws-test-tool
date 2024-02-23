@@ -24,6 +24,7 @@
                 <label for="work">상태(workState)<input type="radio" id="work" name="radio" value="/work"></label>
                 <label for="bms">배터리(bms) <input type="radio" id="bms" name="radio" value="/bms"></label>
                 <label for="device">차상(device) <input type="radio" id="device" name="radio" value="/device"></label>
+                <label for="device">차상(loader) 신규 <input type="radio" id="loader" name="radio" value="/loader"></label>
                 <label for="mode">모드(mode) <input type="radio" id="mode" name="radio" value="/mode"></label>
         </div>
     </div>
@@ -92,7 +93,7 @@
 <script>
     let stompClient = null;
     let connecting = null;
-    const topicBase = '/user/sub';
+    const topicBase = '/sub';
     let topic = '';
 
     $("input[name='radio']:radio").change(function () {
